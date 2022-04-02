@@ -140,7 +140,7 @@ bgsplay = {
     "plays": [play(table)],
     "locations": [location(table)],
     "players": players_data(table),
-    "userInfo": {"meRefId": 85720295},
+    "userInfo": {"meRefId": ctuncan_bga},
 }
 
 print(json.dumps(bgsplay, cls=BGStatsEncoder))
