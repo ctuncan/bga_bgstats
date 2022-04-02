@@ -5,6 +5,7 @@ import json
 import requests
 import uuid
 import datetime
+import itertools
 
 ctuncan_ns = uuid.uuid5(uuid.NAMESPACE_DNS, "chris.tuncan.uk")
 table_ns = uuid.uuid5(ctuncan_ns, "bga-tables")
@@ -45,7 +46,12 @@ def start(table):
 def players(table):
     keys = ("players", "player_names", "ranks", "scores")
     Player = namedtuple("Player", ("id", "name", "rank", "score"))
-    return [Player(*data) for data in zip(*(table[key].split(",") for key in keys))]
+    def safe_key_split(key):
+        raw = table[key]
+        if raw is None: return [ None ]
+        return raw.split(",")
+    return [Player(*data) for data in itertools.zip_longest(*(safe_key_split(key) for key in keys))]
+
 
 
 def play(table):
