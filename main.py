@@ -66,18 +66,13 @@ def play(table):
             }
             for player in players(table)
         ],
-        "modificationDate": start(table),
-        # "bggLastSync" : "2017-12-31 16:42:11", Valid export didn't have this
         "playDate": start(table),
         "manualWinner": False,
         "locationRefId": 1,
         "rounds": 0,
         "usesTeams": False,
-        # "bggId" : 0,  Valid export didn't have this
-        "entryDate": "2017-12-31 16:41:33",
         "playImages": "[]",
         "durationMin": duration_s(table) // 60,
-        # "nemestatsId" : 0,  Valid export didn't have this
         "gameRefId": int(table["game_id"]),
     }
 
@@ -85,8 +80,6 @@ def play(table):
 def location(table):
     return {
         "id": 1,
-        # "modificationDate" : "2017-12-31 16:40:41",
-        "modificationDate": start(table),
         "name": "Board Game Arena",
         "uuid": location_ns,
     }
@@ -97,8 +90,6 @@ def players_data(table):
         {
             "id": int(player.id),
             "isAnonymous": False,
-            # "modificationDate" : "2017-12-31 16:40:41",
-            "modificationDate": start(table),
             "name": player.name,
             "uuid": uuid.uuid5(player_ns, player.id),
         }
@@ -113,15 +104,10 @@ def game(table):
         "noPoints": False,
         "highestWins": True,
         "cooperative": False,
-        # "urlThumb" : "https:\/\/cf.geekdo-images.com\/images\/pic394356_md.jpg",  Valid export didn't have this
-        # "modificationDate" : "2017-12-31 16:41:03",
-        "modificationDate": start(table),
         "usesTeams": False,
         "bggId": 0,
-        # "bggName" : "Dominion",
         "bggYear": 0,
         "name": table["game_name"],
-        # "designers" : "Donald X. Vaccarino"
     }
 
 
