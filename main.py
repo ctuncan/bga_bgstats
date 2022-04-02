@@ -65,7 +65,7 @@ def players(tables):
 def play(table):
     return {
         "uuid": uuid.uuid5(table_ns, table["table_id"]),
-        "ignored": False,
+        "ignored": table["normalend"] != "1",
         "rating": 0,
         "scoringSetting": 0,
         "playerScores": [
@@ -75,7 +75,7 @@ def play(table):
                 "score": player.score,
                 "startPlayer": False,
                 "playerRefId": int(player.id),
-                "rank": player.rank,
+                "rank": player.rank or 0,
                 "newPlayer": False,
             }
             for player in players(table)
