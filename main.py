@@ -32,7 +32,7 @@ def get_games(player, page):
     ).json()
 
 
-table = get_games(ctuncan_bga, 0)["data"]["tables"][0]
+tables = get_games(ctuncan_bga, 0)["data"]["tables"]
 
 
 def duration_s(table):
@@ -43,15 +43,23 @@ def start(table):
     return datetime.datetime.utcfromtimestamp(int(table["start"]))
 
 
-def players(table):
+def players(tables):
+    if not isinstance(tables, list):
+        tables = [tables]
     keys = ("players", "player_names", "ranks", "scores")
     Player = namedtuple("Player", ("id", "name", "rank", "score"))
-    def safe_key_split(key):
-        raw = table[key]
-        if raw is None: return [ None ]
-        return raw.split(",")
-    return [Player(*data) for data in itertools.zip_longest(*(safe_key_split(key) for key in keys))]
+    for table in tables:
 
+        def safe_key_split(key):
+            raw = table[key]
+            if raw is None:
+                return [None]
+            return raw.split(",")
+
+        yield from [
+            Player(*data)
+            for data in itertools.zip_longest(*(safe_key_split(key) for key in keys))
+        ]
 
 
 def play(table):
@@ -83,7 +91,7 @@ def play(table):
     }
 
 
-def location(table):
+def location():
     return {
         "id": 1,
         "name": "Board Game Arena",
@@ -91,7 +99,15 @@ def location(table):
     }
 
 
-def players_data(table):
+def unique(seq, key=None):
+    if key is None:
+        key = lambda x: x
+    seen = set()
+    return (x for x in seq if key(x) not in seen and not seen.add(key(x)))
+
+
+def players_data(players):
+    unique_players = unique(players, lambda player: player.id)
     return [
         {
             "id": int(player.id),
@@ -99,8 +115,13 @@ def players_data(table):
             "name": player.name,
             "uuid": uuid.uuid5(player_ns, player.id),
         }
-        for player in players(table)
+        for player in unique_players
     ]
+
+
+def games(tables):
+    unique_games = unique(tables, lambda table: table["game_id"])
+    return [game(table) for table in unique_games]
 
 
 def game(table):
@@ -128,12 +149,13 @@ class BGStatsEncoder(json.JSONEncoder):
 
 
 bgsplay = {
-    "games": [game(table)],
-    "plays": [play(table)],
-    "locations": [location(table)],
-    "players": players_data(table),
+    "games": games(tables),
+    "plays": [play(table) for table in tables],
+    "locations": [location()],
+    "players": players_data(players(tables)),
     "userInfo": {"meRefId": ctuncan_bga},
 }
+
 
 print(json.dumps(bgsplay, cls=BGStatsEncoder))
 with open("output.bgsplay", "w") as f:
