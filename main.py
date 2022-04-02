@@ -32,9 +32,6 @@ def get_games(player, page):
     ).json()
 
 
-tables = get_games(ctuncan_bga, 0)["data"]["tables"]
-
-
 def duration_s(table):
     return int(table["end"]) - int(table["start"])
 
@@ -147,6 +144,22 @@ class BGStatsEncoder(json.JSONEncoder):
         else:
             return json.JSONEncoder.default(self, obj)
 
+
+def get_tables(max_pages=10):
+    for i in range(max_pages):
+        yield from get_games(ctuncan_bga, i)["data"]["tables"]
+
+
+def get_tables_since(since):
+    for table in get_tables():
+        table_time = datetime.datetime.utcfromtimestamp(int(table["start"]))
+        if table_time > since:
+            yield table
+        else:
+            return
+
+
+tables = list(get_tables_since(datetime.datetime(2021, 12, 8)))
 
 bgsplay = {
     "games": games(tables),
