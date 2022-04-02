@@ -78,7 +78,7 @@ def play(table):
         "playImages": "[]",
         "durationMin": duration_s(table) // 60,
         # "nemestatsId" : 0,  Valid export didn't have this
-        "gameRefId": 1,
+        "gameRefId": int(table["game_id"]),
     }
 
 
