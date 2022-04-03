@@ -158,18 +158,21 @@ def get_tables_since(since):
         else:
             return
 
+def main():
+    tables = list(get_tables_since(datetime.datetime(2021, 12, 8)))
 
-tables = list(get_tables_since(datetime.datetime(2021, 12, 8)))
-
-bgsplay = {
-    "games": games(tables),
-    "plays": [play(table) for table in tables],
-    "locations": [location()],
-    "players": players_data(players(tables)),
-    "userInfo": {"meRefId": ctuncan_bga},
-}
+    bgsplay = {
+        "games": games(tables),
+        "plays": [play(table) for table in tables],
+        "locations": [location()],
+        "players": players_data(players(tables)),
+        "userInfo": {"meRefId": ctuncan_bga},
+    }
 
 
-print(json.dumps(bgsplay, cls=BGStatsEncoder))
-with open("output.bgsplay", "w") as f:
-    print(json.dump(bgsplay, f, cls=BGStatsEncoder))
+    print(json.dumps(bgsplay, cls=BGStatsEncoder))
+    with open("output.bgsplay", "w") as f:
+        print(json.dump(bgsplay, f, cls=BGStatsEncoder))
+
+if __name__ == "__main__":
+    main()
