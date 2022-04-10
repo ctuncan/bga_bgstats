@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 
 from collections import namedtuple
+import argparse
+import datetime
+import itertools
 import json
 import requests
 import uuid
-import datetime
-import itertools
 
 ctuncan_ns = uuid.uuid5(uuid.NAMESPACE_DNS, "chris.tuncan.uk")
 table_ns = uuid.uuid5(ctuncan_ns, "bga-tables")
 player_ns = uuid.uuid5(ctuncan_ns, "bga-players")
 location_ns = uuid.uuid5(ctuncan_ns, "bga-location")
 game_ns = uuid.uuid5(ctuncan_ns, "bga-game")
-
-ctuncan_bga = 0 # Enter your ID here
 
 
 def get_games(player, page):
@@ -145,34 +144,44 @@ class BGStatsEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj)
 
 
-def get_tables(max_pages=10):
+def get_tables(player, max_pages=10):
     for i in range(max_pages):
-        yield from get_games(ctuncan_bga, i)["data"]["tables"]
+        yield from get_games(player, i)["data"]["tables"]
 
 
-def get_tables_since(since):
-    for table in get_tables():
+def get_tables_since(player, since):
+    for table in get_tables(player):
         table_time = datetime.datetime.utcfromtimestamp(int(table["start"]))
         if table_time > since:
             yield table
         else:
             return
 
+
+def cli_parser():
+    parser = argparse.ArgumentParser(
+        description="Download plays from BGA to import into BG Stats"
+    )
+    parser.add_argument("--bga-id", required=True)
+    parser.add_argument("--since", type=datetime.datetime.fromisoformat, required=True)
+
+    return parser
+
+
 def main():
-    tables = list(get_tables_since(datetime.datetime(2021, 12, 8)))
+    args = cli_parser().parse_args()
+    tables = list(get_tables_since(args.bga_id, args.since))
 
     bgsplay = {
         "games": games(tables),
         "plays": [play(table) for table in tables],
         "locations": [location()],
         "players": players_data(players(tables)),
-        "userInfo": {"meRefId": ctuncan_bga},
+        "userInfo": {"meRefId": args.bga_id},
     }
 
-
     print(json.dumps(bgsplay, cls=BGStatsEncoder))
-    with open("output.bgsplay", "w") as f:
-        print(json.dump(bgsplay, f, cls=BGStatsEncoder))
+
 
 if __name__ == "__main__":
     main()
