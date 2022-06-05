@@ -162,7 +162,7 @@ def cli_parser():
     parser = argparse.ArgumentParser(
         description="Download plays from BGA to import into BG Stats"
     )
-    parser.add_argument("--bga-id", required=True)
+    parser.add_argument("--bga-id", type=int, required=True)
     parser.add_argument("--since", type=datetime.datetime.fromisoformat, required=True)
 
     return parser
