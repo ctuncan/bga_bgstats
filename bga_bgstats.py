@@ -149,8 +149,8 @@ def get_tables(player, max_pages=10):
         yield from get_games(player, i)["data"]["tables"]
 
 
-def get_tables_since(player, since):
-    for table in get_tables(player):
+def get_tables_since(player, since, max_pages):
+    for table in get_tables(player, max_pages):
         table_time = datetime.datetime.utcfromtimestamp(int(table["start"]))
         if table_time > since:
             yield table
@@ -164,13 +164,14 @@ def cli_parser():
     )
     parser.add_argument("--bga-id", type=int, required=True)
     parser.add_argument("--since", type=datetime.datetime.fromisoformat, required=True)
+    parser.add_argument("--max-pages", type=int, default=10)
 
     return parser
 
 
 def main():
     args = cli_parser().parse_args()
-    tables = list(get_tables_since(args.bga_id, args.since))
+    tables = list(get_tables_since(args.bga_id, args.since, args.max_pages))
 
     bgsplay = {
         "games": games(tables),
