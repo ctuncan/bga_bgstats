@@ -16,15 +16,14 @@ game_ns = uuid.uuid5(ctuncan_ns, "bga-game")
 
 
 def get_games(player, page):
+    assert page > 0
     params = {
         "player": player,
         "opponent_id": 0,
         "finished": 0,
         "updateStats": 0,
+        "page": page,
     }
-
-    if page > 0:
-        params["page"] = page
 
     return requests.get(
         "https://boardgamearena.com/gamestats/gamestats/getGames.html", params=params
@@ -146,7 +145,7 @@ class BGStatsEncoder(json.JSONEncoder):
 
 def get_tables(player, max_pages=10):
     for i in range(max_pages):
-        yield from get_games(player, i)["data"]["tables"]
+        yield from get_games(player, i + 1)["data"]["tables"]
 
 
 def get_tables_since(player, since, max_pages):
