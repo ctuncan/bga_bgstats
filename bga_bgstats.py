@@ -158,7 +158,7 @@ def get_tables(player, max_pages=10):
 def get_tables_since(player, since, max_pages):
     for table in get_tables(player, max_pages):
         table_time = datetime.datetime.utcfromtimestamp(int(table["start"]))
-        if table_time > since:
+        if since is None or table_time > since:
             yield table
         else:
             return
@@ -171,7 +171,7 @@ def cli_parser():
     parser.add_argument("--username", required=True)
     parser.add_argument("--password", required=True)
     parser.add_argument("--bga-id", type=int, help="Who's plays to download")
-    parser.add_argument("--since", type=datetime.datetime.fromisoformat, required=True)
+    parser.add_argument("--since", type=datetime.datetime.fromisoformat)
     parser.add_argument("--max-pages", type=int, default=10)
 
     return parser
