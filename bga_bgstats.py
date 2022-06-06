@@ -7,12 +7,15 @@ import itertools
 import json
 import requests
 import uuid
+import re
 
 ctuncan_ns = uuid.uuid5(uuid.NAMESPACE_DNS, "chris.tuncan.uk")
 table_ns = uuid.uuid5(ctuncan_ns, "bga-tables")
 player_ns = uuid.uuid5(ctuncan_ns, "bga-players")
 location_ns = uuid.uuid5(ctuncan_ns, "bga-location")
 game_ns = uuid.uuid5(ctuncan_ns, "bga-game")
+
+session = requests.Session()
 
 
 def get_games(player, page):
@@ -25,8 +28,12 @@ def get_games(player, page):
         "page": page,
     }
 
-    return requests.get(
-        "https://boardgamearena.com/gamestats/gamestats/getGames.html", params=params
+    session_id = session.cookies.get("TournoiEnLigneid")
+
+    return session.get(
+        "https://boardgamearena.com/gamestats/gamestats/getGames.html",
+        params=params,
+        headers={"X-Request-Token": session_id},
     ).json()
 
 
@@ -161,15 +168,40 @@ def cli_parser():
     parser = argparse.ArgumentParser(
         description="Download plays from BGA to import into BG Stats"
     )
-    parser.add_argument("--bga-id", type=int, required=True)
+    parser.add_argument("--username", required=True)
+    parser.add_argument("--password", required=True)
+    parser.add_argument("--bga-id", type=int, help="Who's plays to download")
     parser.add_argument("--since", type=datetime.datetime.fromisoformat, required=True)
     parser.add_argument("--max-pages", type=int, default=10)
 
     return parser
 
 
+def login(username, password):
+    login_page = session.get("https://boardgamearena.com/account")
+    # TODO(CJRT): This is fragile
+    request_token = re.search(
+        b"name='request_token'.*value='(.*)'", login_page.content
+    ).group(1)
+    login = session.post(
+        "https://boardgamearena.com/account/account/login.html",
+        data={
+            "email": username,
+            "password": password,
+            "rememberme": "off",
+            "request_token": request_token,
+        },
+    )
+    return login.json()["data"]["infos"]["id"]
+
+
 def main():
     args = cli_parser().parse_args()
+
+    meRefId = login(args.username, args.password)
+    if args.bga_id is None:
+        args.bga_id = meRefId
+
     tables = list(get_tables_since(args.bga_id, args.since, args.max_pages))
 
     bgsplay = {
